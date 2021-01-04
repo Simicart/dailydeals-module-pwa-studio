@@ -83,7 +83,7 @@ const GalleryItem = props => {
                     </div>
                 )}
                 {(timeLeft > 0) ? (
-                    <DiscountLabel discountLabel = {item.discount_label}/>
+                    <DiscountLabel discountLabel = {item.mp_daily_deal.discount_label}/>
                 ):(null)}
                 {(timeLeft > 0) ? (
 
