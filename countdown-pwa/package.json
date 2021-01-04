@@ -29,7 +29,8 @@
     "@magento/venia-drivers": "src/drivers"
   },
   "dependencies": {
-    "@magento/pwa-buildpack": "~7.0.0"
+    "@magento/pwa-buildpack": "~7.0.0",
+    "@simicart/testcountdown": "link:./@simicart/testcountdown"
   },
   "devDependencies": {
     "@adobe/apollo-link-mutation-queue": "~1.0.2",
