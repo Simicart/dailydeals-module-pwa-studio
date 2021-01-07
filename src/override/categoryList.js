@@ -6,8 +6,8 @@ import defaultClasses from '@magento/venia-ui/lib/components/CategoryList/catego
 import CategoryTile from '@magento/venia-ui/lib/components/CategoryList/categoryTile';
 import categoryListQuery from '@magento/venia-ui/lib/queries/getCategoryList.graphql';
 import { useCategoryList } from '@magento/peregrine/lib/talons/CategoryList/useCategoryList';
-import {useProductList} from '@simicart/testcountdown/src/talons/useProductList';
-import {useProductDetails} from '@simicart/testcountdown/src/talons/useProductDetail'
+import {useProductList} from '@simicart/dailydeals/src/talons/useProductList';
+import {useProductDetails} from '@simicart/dailydeals/src/talons/useProductDetail'
 import Gallery from '@magento/venia-ui/lib/components/Gallery';
 import {convertDate, calculateTimeLeft} from './dailyDeal'
 // map Magento 2.3.1 schema changes to Venia 2.0.0 proptype shape to maintain backwards compatibility
