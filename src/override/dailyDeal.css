@@ -1,18 +1,16 @@
-.root{
-
+.root {
 }
-.old{
+.old {
     padding-left: 10px;
     text-decoration: line-through;
     color: gray;
 }
-.underprice{
-    
-    background: #FFFFFF;
-    border: solid 1px #61A969;
-    color: #61A969;
+.underprice {
+    background: #ffffff;
+    border: solid 1px #61a969;
+    color: #61a969;
 }
-.productPriceOld{
+.productPriceOld {
     display: inline-block;
     text-decoration: line-through;
     color: gray;
@@ -22,29 +20,27 @@
     display: inline-block;
     padding-right: 10px;
     text-decoration: none;
-    color:black;
+    color: black;
 }
 
-.row{
-    display:flex;
+.row {
+    display: flex;
     align-items: center;
-    flex-wrap: wrap;
     justify-content: space-around;
 }
-.col-4{
+.col-4 {
     flex-basis: 25%;
     min-width: 0px;
 }
 .deal_style_4 {
-
     display: inline;
-    flex-basis:25%;
+    flex-basis: 25%;
     width: auto;
-    background: #00BF96;
-    border-color: #00BF96;
+    background: #00bf96;
+    border-color: #00bf96;
     border-radius: 3px;
-    font-family: Tahoma,Verdana,Segoe,sans-serif;
-    
+    font-family: Tahoma, Verdana, Segoe, sans-serif;
+
     color: #ffffff;
     text-align: center;
     line-height: 1;
@@ -55,4 +51,18 @@
     justify-content: center;
     flex-direction: column;
     min-width: 50px;
+}
+.vl {
+    border-left: 1px solid gray;
+    margin-right: 5px;
+    height: 500px;
+}
+.hl {
+    height: 2px;
+    border-width: 0;
+    color: gray;
+    background-color: gray;
+}
+.salePrice {
+    display: block;
 }

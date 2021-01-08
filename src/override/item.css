@@ -41,14 +41,14 @@
     flex-wrap: wrap;
     justify-content: space-around;
 }
-.col-2{
-    flex-basis: 50%;
-    min-width: 0px;
+.right{
+    display: inline;
+    float: right;
 }
 .deal_style_4 {
 
-    display: inline;
-    flex-basis: 50%;
+    display: flex;
+    flex-basis: 25%;
     width: auto;
     background: #00BF96;
     border-color: #00BF96;
@@ -64,7 +64,7 @@
     display: flex;
     justify-content: center;
     flex-direction: column;
-    min-width: 50px;
+    
 } 
 .image {
     display: block;

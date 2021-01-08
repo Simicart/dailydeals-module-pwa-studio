@@ -19,10 +19,18 @@ import {
     ADD_CONFIGURABLE_MUTATION,
     ADD_SIMPLE_MUTATION
 } from '@magento/venia-ui/lib/components/ProductFullDetail/productFullDetail.gql';
-import { useProductDetails } from '../talons/useProductDetail'
-import { DiscountLabel, DealPrice, CountDownTimer, calculateTimeLeft } from './dailyDeal.js'
+import { useProductDetails } from '../talons/useProductDetail';
+import {
+    DiscountLabel,
+    DealPrice,
+    CountDownTimer,
+    calculateTimeLeft,
+    ItemLeftSold
+} from './dailyDeal.js';
 import { useRef, useEffect, useState } from 'react';
-const Options = React.lazy(() => import('@magento/venia-ui/lib/components//ProductOptions'));
+const Options = React.lazy(() =>
+    import('@magento/venia-ui/lib/components//ProductOptions')
+);
 
 // Correlate a GQL error message to a field. GQL could return a longer error
 // string but it may contain contextual info such as product id. We can use
@@ -38,31 +46,36 @@ const ERROR_FIELD_TO_MESSAGE_MAPPING = {
     quantity: 'The requested quantity is not available.'
 };
 
-
 const ProductFullDetail = props => {
     const classes = mergeClasses(defaultClasses, props.classes);
-    const { product } = props
-    const labelData = props.product.mp_label_data
+    const { product } = props;
+    const labelData = props.product.mp_label_data;
     const talonProps = useProductFullDetail({
         addConfigurableProductToCartMutation: ADD_CONFIGURABLE_MUTATION,
         addSimpleProductToCartMutation: ADD_SIMPLE_MUTATION,
         product
     });
-    const { detailsData,
+    const {
+        detailsData,
         detailsLoading,
-        deriveErrorMessage } = useProductDetails({ sku_product: props.product.sku });
+        deriveErrorMessage
+    } = useProductDetails({ sku_product: props.product.sku });
     console.log(detailsData);
-    var mp_daily_deal1, dateTo, timeLeft = null;
+    var mp_daily_deal1,
+        dateTo = null,
+        timeLeft = null;
 
     if (detailsData) {
-        detailsData.products.items.map(function (item) {
+        detailsData.products.items.map(function(item) {
             if (item.mp_daily_deal) {
                 mp_daily_deal1 = item.mp_daily_deal;
-                dateTo = item.mp_daily_deal.date_to;
-                timeLeft = calculateTimeLeft(dateTo);
+                if (item.mp_daily_deal.date_to) {
+                    dateTo = item.mp_daily_deal.date_to;
+                    timeLeft = calculateTimeLeft(dateTo);
+                }
                 return { mp_daily_deal1, timeLeft, dateTo };
             }
-        })
+        });
     }
     console.log(mp_daily_deal1);
     console.log('timeLeft:' + timeLeft);
@@ -78,8 +91,6 @@ const ProductFullDetail = props => {
         productDetails,
         quantity
     } = talonProps;
-
-
 
     const options = isProductConfigurable(product) ? (
         <Suspense fallback={fullPageLoadingIndicator}>
@@ -147,36 +158,36 @@ const ProductFullDetail = props => {
                     <h1 className={classes.productName}>
                         {productDetails.name}
                     </h1>
-                    {(timeLeft > 0) ? (
-                        <div>
+                    {timeLeft > 0 ? (
+                        <div >
                             <DealPrice
-                                classes={classes}
+                                
                                 dealPrice={mp_daily_deal1.deal_price}
                                 regularPrice={productDetails.price.value}
                                 currencyCode={productDetails.price.currency}
                             />
-
                         </div>
                     ) : (
-                            <p className={classes.productPrice}>
-                                <Price
-                                    currencyCode={productDetails.price.currency}
-                                    value={productDetails.price.value}
-                                />
-                            </p>
-                        )}
-                    {(timeLeft > 0) ? (
+                        <p className={classes.productPrice}>
+                            <Price
+                                currencyCode={productDetails.price.currency}
+                                value={productDetails.price.value}
+                            />
+                        </p>
+                    )}
+                    {timeLeft > 0 ? (
                         <DiscountLabel
                             classes={classes}
                             discountLabel={mp_daily_deal1.discount_label}
                         />
-                    ) : (null)}
-
-
+                    ) : null}
                 </section>
-
+                <section className={classes.options} />
                 <section className={classes.imageCarousel}>
-                    <Carousel images={mediaGalleryEntries} labelData={labelData} />
+                    <Carousel
+                        images={mediaGalleryEntries}
+                        labelData={labelData}
+                    />
                 </section>
                 <FormError
                     classes={{
@@ -184,8 +195,15 @@ const ProductFullDetail = props => {
                     }}
                     errors={errors.get('form') || []}
                 />
-                <section className={classes.options}>{options}</section>
+
                 <section className={classes.quantity}>
+                    {timeLeft > 0 ? (
+                        <ItemLeftSold
+                            dealQty={mp_daily_deal1.deal_qty}
+                            saleQty={mp_daily_deal1.sale_qty}
+                        />
+                    ) : null}
+                    <br />
                     <h2 className={classes.quantityTitle}>Quantity</h2>
                     <Quantity
                         initialValue={quantity}
@@ -193,13 +211,12 @@ const ProductFullDetail = props => {
                         message={errors.get('quantity')}
                     />
                 </section>
-                {(timeLeft > 0) ? (
-
+                {timeLeft > 0 ? (
                     <CountDownTimer
                         dateTo={mp_daily_deal1.date_to}
                         classes={classes}
                     />
-                ) : (null)}
+                ) : null}
 
                 <section className={classes.cartActions}>
                     <Button
@@ -208,12 +225,12 @@ const ProductFullDetail = props => {
                         disabled={isAddToCartDisabled}
                     >
                         Add to Cart
-                        </Button>
+                    </Button>
                 </section>
                 <section className={classes.description}>
                     <h2 className={classes.descriptionTitle}>
                         Product Description
-                        </h2>
+                    </h2>
                     <RichText content={productDetails.description} />
                 </section>
                 <section className={classes.details}>
@@ -222,10 +239,7 @@ const ProductFullDetail = props => {
                 </section>
             </Form>
         </Fragment>
-    )
-
-
-
+    );
 };
 
 ProductFullDetail.propTypes = {

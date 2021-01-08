@@ -7,8 +7,15 @@ import { UNCONSTRAINED_SIZE_KEY } from '@magento/peregrine/lib/talons/Image/useI
 import moment from 'moment';
 import { mergeClasses } from '@magento/venia-ui/lib/classify';
 import Image from '@magento/venia-ui/lib/components/Image';
-import defaultClasses from './item.css';
-import {DealPrice, CountDownTimer, DiscountLabel, calculateTimeLeft, convertDate} from './dailyDeal.js';
+import defaultClasses from '@magento/venia-ui/lib/components/Gallery/item.css';
+import {
+    DealPrice,
+    CountDownTimer,
+    DiscountLabel,
+    calculateTimeLeft,
+    convertDate,
+    ItemLeftSold
+} from './dailyDeal.js';
 import { useRef, useEffect, useState } from 'react';
 // The placeholder image is 4:5, so we should make sure to size our product
 // images appropriately.
@@ -39,42 +46,55 @@ const ItemPlaceholder = ({ classes }) => (
 
 const GalleryItem = props => {
     const { item } = props;
-    
+
     const classes = mergeClasses(defaultClasses, props.classes);
 
     if (!item) {
         return <ItemPlaceholder classes={classes} />;
     }
 
-    const { mp_daily_deal, name, price, small_image, url_key, url_suffix } = item;
+    const {
+        mp_daily_deal,
+        name,
+        price,
+        small_image,
+        url_key,
+        url_suffix
+    } = item;
     const productLink = resourceUrl(`/${url_key}${url_suffix}`);
-    if (item.mp_daily_deal){
+    if (item.mp_daily_deal) {
         const dateTo = item.mp_daily_deal.date_to;
         const timeLeft = calculateTimeLeft(dateTo);
         return (
             <div className={classes.root}>
                 <Link to={productLink} className={classes.images}>
-                    <img
+                    <Image
                         alt={name}
-                        // classes={{
-                        //     image: classes.image,
-                        //     root: classes.imageContainer
-                        // }}
+                        classes={{
+                            image: classes.image,
+                            root: classes.imageContainer
+                        }}
                         height={IMAGE_HEIGHT}
-                        src={small_image}
+                        resource={small_image}
                         widths={IMAGE_WIDTHS}
                     />
                 </Link>
                 <Link to={productLink} className={classes.name}>
                     <span>{name}</span>
                 </Link>
-                {(timeLeft > 0) ? (
+                {timeLeft > 0 ? (
+
+                    <div className={classes.right}>
+                        
                         <DealPrice
-                            dealPrice = {item.mp_daily_deal.deal_price}                    
+                            dealPrice={item.mp_daily_deal.deal_price}
                             regularPrice={price.regularPrice.amount.value}
                             currencyCode={price.regularPrice.amount.currency}
                         />
-                ):(
+                        
+                    </div>
+                    
+                ) : (
                     <div className={classes.price}>
                         <Price
                             value={price.regularPrice.amount.value}
@@ -82,48 +102,52 @@ const GalleryItem = props => {
                         />
                     </div>
                 )}
-                {(timeLeft > 0) ? (
-                    <DiscountLabel discountLabel = {item.mp_daily_deal.discount_label}/>
-                ):(null)}
-                {(timeLeft > 0) ? (
-
-                    <CountDownTimer 
-                        dateTo={dateTo}
+                {timeLeft > 0 ? (
+                    <div>
+                        <br></br>
+                    <DiscountLabel
+                        discountLabel={item.mp_daily_deal.discount_label}
                     />
-                ):(
-                    null
-                )}
+                        
+                    </div>
+                ) : null}
+
+                {timeLeft > 0 ? (
+                    <ItemLeftSold
+                        dealQty={item.mp_daily_deal.deal_qty}
+                        saleQty={item.mp_daily_deal.sale_qty}
+                    />
+                ) : null}
+                {timeLeft > 0 ? <CountDownTimer dateTo={dateTo} /> : null}
+            </div>
+        );
+    } else {
+        return (
+            <div className={classes.root}>
+                <Link to={productLink} className={classes.images}>
+                    <Image
+                        alt={name}
+                        classes={{
+                            image: classes.image,
+                            root: classes.imageContainer
+                        }}
+                        height={IMAGE_HEIGHT}
+                        resource={small_image}
+                        widths={IMAGE_WIDTHS}
+                    />
+                </Link>
+                <Link to={productLink} className={classes.name}>
+                    <span>{name}</span>
+                </Link>
+                <div className={classes.price}>
+                    <Price
+                        value={price.regularPrice.amount.value}
+                        currencyCode={price.regularPrice.amount.currency}
+                    />
+                </div>
             </div>
         );
     }
-    else{
-        return (
-        <div className={classes.root}>
-            <Link to={productLink} className={classes.images}>
-                <Image
-                    alt={name}
-                    classes={{
-                        image: classes.image,
-                        root: classes.imageContainer
-                    }}
-                    height={IMAGE_HEIGHT}
-                    resource={small_image}
-                    widths={IMAGE_WIDTHS}
-                />
-            </Link>
-            <Link to={productLink} className={classes.name}>
-                <span>{name}</span>
-            </Link>
-            <div className={classes.price}>
-                <Price
-                    value={price.regularPrice.amount.value}
-                    currencyCode={price.regularPrice.amount.currency}
-                />
-            </div>
-        </div>
-    );
-    }
-    
 };
 
 GalleryItem.propTypes = {
@@ -170,7 +194,7 @@ GalleryItem.propTypes = {
             sale_qty: number,
             status: number,
             store_ids: string,
-            updated_at: string,
+            updated_at: string
         })
     })
 };
