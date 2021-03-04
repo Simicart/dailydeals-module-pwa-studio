@@ -15,7 +15,7 @@ modify packagejson
 ```
 
 modify webpack.config.js
-
+```
 config.module.noParse = [/braintree\-web\-drop\-in/];
 config.module.rules.push(
     {
@@ -27,4 +27,4 @@ config.module.rules.push(
         ]
     }
 );
-    
+```
