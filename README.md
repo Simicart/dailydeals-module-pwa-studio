@@ -3,7 +3,7 @@
 
 ## What is this?
 
-http://dailydeal.pwa-commerce.com/
+http://dailydeals.pwa-commerce.com/
 
 ## Requirements
 
