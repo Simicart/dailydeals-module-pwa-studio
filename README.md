@@ -1,4 +1,4 @@
-# StoreLocator module for Magento PWA Studio
+# Daily Deal module for Magento PWA Studio
 
 
 ## What is this?
@@ -35,7 +35,7 @@ Change the .env MAGENTO_BACKEND_URL with your Magento site URL, or use our demo 
 ```
 ### 4. Modify package.json
 
-Modify the dependencies of your project to add Shop By Brand extension.
+Modify the dependencies of your project to add Daily Deal extension.
 
 ```
   "dependencies": {
