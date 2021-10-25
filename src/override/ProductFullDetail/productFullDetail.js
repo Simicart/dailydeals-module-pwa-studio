@@ -1,36 +1,38 @@
 import React, { Fragment, Suspense } from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { arrayOf, bool, number, shape, string } from 'prop-types';
 import { Form } from 'informed';
+import { Info } from 'react-feather';
 
-import { Price } from '@magento/peregrine';
+import Price from '@magento/venia-ui/lib/components/Price';
 import { useProductFullDetail } from '@magento/peregrine/lib/talons/ProductFullDetail/useProductFullDetail';
 import { isProductConfigurable } from '@magento/peregrine/lib/util/isProductConfigurable';
 
-import { mergeClasses } from '@magento/venia-ui/lib/classify';
+import { useStyle } from '@magento/venia-ui/lib/classify';
 import Breadcrumbs from '@magento/venia-ui/lib/components/Breadcrumbs';
 import Button from '@magento/venia-ui/lib/components/Button';
 import Carousel from '@magento/venia-ui/lib/components/ProductImageCarousel';
 import FormError from '@magento/venia-ui/lib/components/FormError';
 import { fullPageLoadingIndicator } from '@magento/venia-ui/lib/components/LoadingIndicator';
-import Quantity from '@magento/venia-ui/lib/components/ProductQuantity';
+import { QuantityFields } from '@magento/venia-ui/lib/components/CartPage/ProductListing/quantity';
 import RichText from '@magento/venia-ui/lib/components/RichText';
 import defaultClasses from '@magento/venia-ui/lib/components/ProductFullDetail/productFullDetail.css';
 import {
     ADD_CONFIGURABLE_MUTATION,
     ADD_SIMPLE_MUTATION
 } from '@magento/venia-ui/lib/components/ProductFullDetail/productFullDetail.gql';
-import { useProductDetails } from '../talons/useProductDetail';
+import { useProductDetails } from '../../talons/useProductDetail';
 import {
     DiscountLabel,
     DealPrice,
     CountDownTimer,
     calculateTimeLeft,
     ItemLeftSold
-} from './dailyDeal.js';
-import { useRef, useEffect, useState } from 'react';
-const Options = React.lazy(() =>
-    import('@magento/venia-ui/lib/components//ProductOptions')
-);
+} from '../DailyDeals/dailyDeal';
+
+const WishlistButton = React.lazy(() => import('@magento/venia-ui/lib/components/Wishlist/AddToListButton'));
+const Options = React.lazy(() => import('@magento/venia-ui/lib/components/ProductOptions'));
+
 
 // Correlate a GQL error message to a field. GQL could return a longer error
 // string but it may contain contextual info such as product id. We can use
@@ -47,50 +49,54 @@ const ERROR_FIELD_TO_MESSAGE_MAPPING = {
 };
 
 const ProductFullDetail = props => {
-    const classes = mergeClasses(defaultClasses, props.classes);
     const { product } = props;
+
     const labelData = props.product.mp_label_data;
+
     const talonProps = useProductFullDetail({
         addConfigurableProductToCartMutation: ADD_CONFIGURABLE_MUTATION,
         addSimpleProductToCartMutation: ADD_SIMPLE_MUTATION,
         product
     });
+
     const {
         detailsData,
         detailsLoading,
         deriveErrorMessage
     } = useProductDetails({ sku_product: props.product.sku });
-    console.log(detailsData);
-    var mp_daily_deal1,
+    
+    let mp_daily_deal,
         dateTo = null,
         timeLeft = null;
 
     if (detailsData) {
-        detailsData.products.items.map(function(item) {
+        detailsData.products.items.map(function (item) {
             if (item.mp_daily_deal) {
-                mp_daily_deal1 = item.mp_daily_deal;
+                mp_daily_deal = item.mp_daily_deal;
                 if (item.mp_daily_deal.date_to) {
                     dateTo = item.mp_daily_deal.date_to;
                     timeLeft = calculateTimeLeft(dateTo);
                 }
-                return { mp_daily_deal1, timeLeft, dateTo };
+                return { mp_daily_deal, timeLeft, dateTo };
             }
         });
     }
-    console.log(mp_daily_deal1);
-    console.log('timeLeft:' + timeLeft);
+   
 
     const {
         breadcrumbCategoryId,
         errorMessage,
         handleAddToCart,
         handleSelectionChange,
-        handleSetQuantity,
         isAddToCartDisabled,
+        isSupportedProductType,
         mediaGalleryEntries,
         productDetails,
-        quantity
+        wishlistButtonProps
     } = talonProps;
+    const { formatMessage } = useIntl();
+
+    const classes = useStyle(defaultClasses, props.classes);
 
     const options = isProductConfigurable(product) ? (
         <Suspense fallback={fullPageLoadingIndicator}>
@@ -124,7 +130,11 @@ const ProductFullDetail = props => {
         if (errorMessage.includes('The current user cannot')) {
             errors.set('form', [
                 new Error(
-                    'There was a problem with your cart. Please sign in again and try adding the item once more.'
+                    formatMessage({
+                        id: 'productFullDetail.errorToken',
+                        defaultMessage:
+                            'There was a problem with your cart. Please sign in again and try adding the item once more.'
+                    })
                 )
             ]);
         }
@@ -135,7 +145,11 @@ const ProductFullDetail = props => {
         ) {
             errors.set('form', [
                 new Error(
-                    'There was a problem with your cart. Please refresh the page and try adding the item once more.'
+                    formatMessage({
+                        id: 'productFullDetail.errorCart',
+                        defaultMessage:
+                            'There was a problem with your cart. Please refresh the page and try adding the item once more.'
+                    })
                 )
             ]);
         }
@@ -144,16 +158,41 @@ const ProductFullDetail = props => {
         if (!errors.size) {
             errors.set('form', [
                 new Error(
-                    'Could not add item to cart. Please check required options and try again.'
+                    formatMessage({
+                        id: 'productFullDetail.errorUnknown',
+                        defaultMessage:
+                            'Could not add item to cart. Please check required options and try again.'
+                    })
                 )
             ]);
         }
     }
 
+    const cartActionContent = isSupportedProductType ? (
+        <Button disabled={isAddToCartDisabled} priority="high" type="submit">
+            <FormattedMessage
+                id={'productFullDetail.cartAction'}
+                defaultMessage={'Add to Cart'}
+            />
+        </Button>
+    ) : (
+        <div className={classes.unavailableContainer}>
+            <Info />
+            <p>
+                <FormattedMessage
+                    id={'productFullDetail.unavailableProduct'}
+                    defaultMessage={
+                        'This product is currently unavailable for purchase.'
+                    }
+                />
+            </p>
+        </div>
+    );
+
     return (
         <Fragment>
             {breadcrumbs}
-            <Form className={classes.root}>
+            <Form className={classes.root} onSubmit={handleAddToCart}>
                 <section className={classes.title}>
                     <h1 className={classes.productName}>
                         {productDetails.name}
@@ -161,8 +200,7 @@ const ProductFullDetail = props => {
                     {timeLeft > 0 ? (
                         <div >
                             <DealPrice
-                                
-                                dealPrice={mp_daily_deal1.deal_price}
+                                dealPrice={mp_daily_deal.deal_price}
                                 regularPrice={productDetails.price.value}
                                 currencyCode={productDetails.price.currency}
                             />
@@ -178,16 +216,12 @@ const ProductFullDetail = props => {
                     {timeLeft > 0 ? (
                         <DiscountLabel
                             classes={classes}
-                            discountLabel={mp_daily_deal1.discount_label}
+                            discountLabel={mp_daily_deal.discount_label}
                         />
                     ) : null}
                 </section>
-                <section className={classes.options} />
                 <section className={classes.imageCarousel}>
-                    <Carousel
-                        images={mediaGalleryEntries}
-                        labelData={labelData}
-                    />
+                    <Carousel images={mediaGalleryEntries} labelData={labelData} />
                 </section>
                 <FormError
                     classes={{
@@ -195,46 +229,54 @@ const ProductFullDetail = props => {
                     }}
                     errors={errors.get('form') || []}
                 />
-
+                <section className={classes.options}>{options}</section>
                 <section className={classes.quantity}>
                     {timeLeft > 0 ? (
                         <ItemLeftSold
-                            dealQty={mp_daily_deal1.deal_qty}
-                            saleQty={mp_daily_deal1.sale_qty}
+                            dealQty={mp_daily_deal.deal_qty}
+                            saleQty={mp_daily_deal.sale_qty}
                         />
                     ) : null}
-                    <br />
-                    <h2 className={classes.quantityTitle}>Quantity</h2>
-                    <Quantity
-                        initialValue={quantity}
-                        onValueChange={handleSetQuantity}
+                    <h2 className={classes.quantityTitle}>
+                        <FormattedMessage
+                            id={'global.quantity'}
+                            defaultMessage={'Quantity'}
+                        />
+                    </h2>
+                    <QuantityFields
+                        classes={{ root: classes.quantityRoot }}
+                        min={1}
                         message={errors.get('quantity')}
                     />
                 </section>
                 {timeLeft > 0 ? (
                     <CountDownTimer
-                        dateTo={mp_daily_deal1.date_to}
+                        dateTo={mp_daily_deal.date_to}
                         classes={classes}
                     />
                 ) : null}
-
-                <section className={classes.cartActions}>
-                    <Button
-                        priority="high"
-                        onClick={handleAddToCart}
-                        disabled={isAddToCartDisabled}
-                    >
-                        Add to Cart
-                    </Button>
+                <section className={classes.actions}>
+                    {cartActionContent}
+                    <Suspense fallback={null}>
+                        <WishlistButton {...wishlistButtonProps} />
+                    </Suspense>
                 </section>
                 <section className={classes.description}>
                     <h2 className={classes.descriptionTitle}>
-                        Product Description
+                        <FormattedMessage
+                            id={'productFullDetail.productDescription'}
+                            defaultMessage={'Product Description'}
+                        />
                     </h2>
                     <RichText content={productDetails.description} />
                 </section>
                 <section className={classes.details}>
-                    <h2 className={classes.detailsTitle}>SKU</h2>
+                    <h2 className={classes.detailsTitle}>
+                        <FormattedMessage
+                            id={'global.sku'}
+                            defaultMessage={'SKU'}
+                        />
+                    </h2>
                     <strong>{productDetails.sku}</strong>
                 </section>
             </Form>
@@ -256,7 +298,8 @@ ProductFullDetail.propTypes = {
         quantity: string,
         quantityTitle: string,
         root: string,
-        title: string
+        title: string,
+        unavailableContainer: string
     }),
     product: shape({
         __typename: string,

@@ -1,6 +1,6 @@
 {
-  "name": "@simicart/dailydeals",
-  "author": "lethanhson9901 <hoasung9901@gmail.com>",
+  "name": "@simicart/dailydeal",
+  "author": "SimiCart",
   "version": "0.0.0",
   "main": "src/index.js",
   "pwa-studio": {

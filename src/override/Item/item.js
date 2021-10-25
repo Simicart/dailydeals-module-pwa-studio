@@ -1,13 +1,14 @@
 import React from 'react';
-import { string, number, shape, any } from 'prop-types';
-import { Link, resourceUrl } from '@magento/venia-drivers';
-import { Price } from '@magento/peregrine';
-import { transparentPlaceholder } from '@magento/peregrine/lib/util/images';
+import { string, number, shape } from 'prop-types';
+import { Link } from 'react-router-dom';
+import Price from '@magento/venia-ui/lib/components/Price';
 import { UNCONSTRAINED_SIZE_KEY } from '@magento/peregrine/lib/talons/Image/useImage';
-import moment from 'moment';
-import { mergeClasses } from '@magento/venia-ui/lib/classify';
+import { useGalleryItem } from '@magento/peregrine/lib/talons/Gallery/useGalleryItem';
+import { transparentPlaceholder } from '@magento/peregrine/lib/util/images';
+import resourceUrl from '@magento/peregrine/lib/util/makeUrl';
 import Image from '@magento/venia-ui/lib/components/Image';
-import defaultClasses from '@magento/venia-ui/lib/components/Gallery/item.css';
+import defaultClasses from './item.css';
+import WishlistGalleryButton from '@magento/venia-ui/lib/components/Wishlist/AddToListButton';
 import {
     DealPrice,
     CountDownTimer,
@@ -15,8 +16,9 @@ import {
     calculateTimeLeft,
     convertDate,
     ItemLeftSold
-} from './dailyDeal.js';
-import { useRef, useEffect, useState } from 'react';
+} from '../DailyDeals/dailyDeal'
+
+
 // The placeholder image is 4:5, so we should make sure to size our product
 // images appropriately.
 const IMAGE_WIDTH = 300;
@@ -45,29 +47,35 @@ const ItemPlaceholder = ({ classes }) => (
 );
 
 const GalleryItem = props => {
-    const { item } = props;
+    const { handleLinkClick, flag, item, wishlistButtonProps } = useGalleryItem(
+        props
+    );
 
-    const classes = mergeClasses(defaultClasses, props.classes);
+    const classes = defaultClasses
 
     if (!item) {
         return <ItemPlaceholder classes={classes} />;
     }
 
-    const {
-        mp_daily_deal,
-        name,
-        price,
-        small_image,
-        url_key,
-        url_suffix
-    } = item;
-    const productLink = resourceUrl(`/${url_key}${url_suffix}`);
-    if (item.mp_daily_deal) {
+    const { name, price, small_image, url_key, url_suffix } = item;
+    const { url: smallImageURL } = small_image;
+    const productLink = resourceUrl(`/${url_key}${url_suffix || ''}`);
+
+    const wishlistButton = wishlistButtonProps ? (
+        <WishlistGalleryButton {...wishlistButtonProps} />
+    ) : null;
+
+
+    if (item.mp_daily_deal != null) {
         const dateTo = item.mp_daily_deal.date_to;
         const timeLeft = calculateTimeLeft(dateTo);
         return (
             <div className={classes.root}>
-                <Link to={productLink} className={classes.images}>
+                <Link
+                    onClick={handleLinkClick}
+                    to={productLink}
+                    className={classes.images}
+                >
                     <Image
                         alt={name}
                         classes={{
@@ -75,7 +83,7 @@ const GalleryItem = props => {
                             root: classes.imageContainer
                         }}
                         height={IMAGE_HEIGHT}
-                        resource={small_image}
+                        resource={smallImageURL}
                         widths={IMAGE_WIDTHS}
                     />
                 </Link>
@@ -83,17 +91,13 @@ const GalleryItem = props => {
                     <span>{name}</span>
                 </Link>
                 {timeLeft > 0 ? (
-
                     <div className={classes.right}>
-                        
                         <DealPrice
                             dealPrice={item.mp_daily_deal.deal_price}
                             regularPrice={price.regularPrice.amount.value}
                             currencyCode={price.regularPrice.amount.currency}
                         />
-                        
                     </div>
-                    
                 ) : (
                     <div className={classes.price}>
                         <Price
@@ -102,29 +106,17 @@ const GalleryItem = props => {
                         />
                     </div>
                 )}
-                {timeLeft > 0 ? (
-                    <div>
-                        <br></br>
-                    <DiscountLabel
-                        discountLabel={item.mp_daily_deal.discount_label}
-                    />
-                        
-                    </div>
-                ) : null}
-
-                {timeLeft > 0 ? (
-                    <ItemLeftSold
-                        dealQty={item.mp_daily_deal.deal_qty}
-                        saleQty={item.mp_daily_deal.sale_qty}
-                    />
-                ) : null}
-                {timeLeft > 0 ? <CountDownTimer dateTo={dateTo} /> : null}
+                {(timeLeft > 0 && flag !== 1) ? <CountDownTimer dateTo={dateTo} /> : null}
             </div>
         );
     } else {
         return (
             <div className={classes.root}>
-                <Link to={productLink} className={classes.images}>
+                <Link
+                    onClick={handleLinkClick}
+                    to={productLink}
+                    className={classes.images}
+                >
                     <Image
                         alt={name}
                         classes={{
@@ -132,11 +124,15 @@ const GalleryItem = props => {
                             root: classes.imageContainer
                         }}
                         height={IMAGE_HEIGHT}
-                        resource={small_image}
+                        resource={smallImageURL}
                         widths={IMAGE_WIDTHS}
                     />
                 </Link>
-                <Link to={productLink} className={classes.name}>
+                <Link
+                    onClick={handleLinkClick}
+                    to={productLink}
+                    className={classes.name}
+                >
                     <span>{name}</span>
                 </Link>
                 <div className={classes.price}>
@@ -145,6 +141,7 @@ const GalleryItem = props => {
                         currencyCode={price.regularPrice.amount.currency}
                     />
                 </div>
+                <div className={classes.actionsContainer}>{wishlistButton}</div>
             </div>
         );
     }
@@ -168,7 +165,9 @@ GalleryItem.propTypes = {
     item: shape({
         id: number.isRequired,
         name: string.isRequired,
-        small_image: string.isRequired,
+        small_image: shape({
+            url: string.isRequired
+        }),
         url_key: string.isRequired,
         price: shape({
             regularPrice: shape({
@@ -177,25 +176,10 @@ GalleryItem.propTypes = {
                     currency: string.isRequired
                 }).isRequired
             }).isRequired
-        }).isRequired,
-        mp_daily_deal: shape({
-            created_at: string,
-            date_from: string,
-            date_to: string,
-            deal_id: number,
-            deal_price: number,
-            remaining_time: string,
-            deal_qty: number,
-            discount_label: string,
-            is_featured: number,
-            product_id: number,
-            product_name: string,
-            product_sku: string,
-            sale_qty: number,
-            status: number,
-            store_ids: string,
-            updated_at: string
-        })
+        }).isRequired
+    }),
+    storeConfig: shape({
+        magento_wishlist_general_is_enabled: string.isRequired
     })
 };
 

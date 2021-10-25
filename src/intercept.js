@@ -8,20 +8,32 @@
  * If you want to add overwrites for @magento/venia-ui components you can use
  * moduleOverrideWebpackPlugin and componentOverrideMapping
  */
-
-const moduleOverrideWebpackPlugin = require('./moduleOverrideWebpackPlugin');
-const componentOverrideMapping = require('./componentOverrideMapping');
-
+ const moduleOverrideWebpackPlugin = require('./moduleOverrideWebpackPlugin');
+ const componentOverrideMapping = require('./componentOverrideMapping');
 module.exports = targets => {
-  	targets.of('@magento/pwa-buildpack').specialFeatures.tap(flags => {
-    /**
-     *  Wee need to activated esModules and cssModules to allow build pack to load our extension
-     * {@link https://magento.github.io/pwa-studio/pwa-buildpack/reference/configure-webpack/#special-flags}.
-     */
-    	flags[targets.name] = { esModules: true, cssModules: true };
+    targets.of('@magento/pwa-buildpack').specialFeatures.tap(flags => {
+        /**
+         *  Wee need to activated esModules and cssModules to allow build pack to load our extension
+         * {@link https://magento.github.io/pwa-studio/pwa-buildpack/reference/configure-webpack/#special-flags}.
+         */
+        flags[targets.name] = {esModules: true, cssModules: true};
     });
-
-    targets.of('@magento/pwa-buildpack').webpackCompiler.tap(compiler => {
-    	new moduleOverrideWebpackPlugin(componentOverrideMapping).apply(compiler);
-    })
+    targets.of('@magento/venia-ui').routes.tap(
+        routesArray => {
+            routesArray.push({
+                name: 'ProductsList',
+                pattern: '/products-list.html',
+                path: '@simicart/dailydeal/src/components/ProductsList/index.js'
+            })
+            routesArray.push({
+                name: 'HomePage',
+                pattern: '/home',
+                path: '@simicart/dailydeal/src/components/Home'
+            })
+            return routesArray
+        }
+    )
+    targets.of('@magento/pwa-buildpack').webpackCompiler.tap(compiler=>{
+        new moduleOverrideWebpackPlugin(componentOverrideMapping).apply(compiler);
+      });
 };

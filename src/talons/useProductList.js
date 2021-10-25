@@ -4,7 +4,7 @@ export const FETCH_LIST_PRODUCT = gql`
         query { 
             MpDailyDeals(filter:{product_sku:{neq:"24-WG022"}} 
                 currentPage: 1
-                pageSize:10
+                pageSize:21
             )
             {
                 items {
@@ -27,15 +27,14 @@ export const FETCH_LIST_PRODUCT = gql`
                 
                 total_count
             }
-
         }
     `;
 
 export const useProductList = () => {
-    
-    const {error: productListError,
-        loading: productListLoading, 
-        data: productListData} = useQuery(FETCH_LIST_PRODUCT);
+
+    const { error: productListError,
+        loading: productListLoading,
+        data: productListData } = useQuery(FETCH_LIST_PRODUCT, { fetchPolicy: 'cache-and-network' });
     let derivedErrorMessage;
     if (productListError) {
         const errorTarget = productListError;
@@ -51,7 +50,7 @@ export const useProductList = () => {
             derivedErrorMessage = errorTarget.message;
         }
     }
-    
+
     return {
         productListData,
         productListLoading,

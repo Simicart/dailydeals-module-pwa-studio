@@ -1,15 +1,19 @@
 import React from 'react';
+import { useIntl } from 'react-intl';
 import { string, number, shape } from 'prop-types';
-import { mergeClasses } from '@magento/venia-ui/lib/classify';
+import { useCategoryList } from '@magento/peregrine/lib/talons/CategoryList/useCategoryList';
+
+import { useStyle } from '@magento/venia-ui/lib/classify';
 import { fullPageLoadingIndicator } from '@magento/venia-ui/lib/components/LoadingIndicator';
+import ErrorView from '@magento/venia-ui/lib/components/ErrorView';
 import defaultClasses from '@magento/venia-ui/lib/components/CategoryList/categoryList.css';
 import CategoryTile from '@magento/venia-ui/lib/components/CategoryList/categoryTile';
-import categoryListQuery from '@magento/venia-ui/lib/queries/getCategoryList.graphql';
-import { useCategoryList } from '@magento/peregrine/lib/talons/CategoryList/useCategoryList';
-import {useProductList} from '@simicart/dailydeals/src/talons/useProductList';
-import {useProductDetails} from '@simicart/dailydeals/src/talons/useProductDetail'
+import { useProductList } from '../../talons/useProductList';
+import { useProductDetails } from '../../talons/useProductDetail';
 import Gallery from '@magento/venia-ui/lib/components/Gallery';
-import {convertDate, calculateTimeLeft} from './dailyDeal'
+import { calculateTimeLeft } from '../DailyDeals/dailyDeal'
+
+
 // map Magento 2.3.1 schema changes to Venia 2.0.0 proptype shape to maintain backwards compatibility
 const mapCategory = categoryItem => {
     const { items } = categoryItem.productImagePreview;
@@ -31,36 +35,37 @@ const mapCategory = categoryItem => {
 };
 
 const CategoryList = props => {
-    const {productListData,
+
+    const { productListData,
         productListLoading,
-        derivedErrorMessage} = useProductList();
+        derivedErrorMessage } = useProductList();
+    
     const skuDatas = [];
     if (productListData) {
         var len = productListData.MpDailyDeals.items.length;
-        for (var i = 0; i < len; i++){
+        for (var i = 0; i < len; i++) {
             let skuData = productListData.MpDailyDeals.items[i].product_sku
             let dateTo = productListData.MpDailyDeals.items[i].date_to
             const totalSeconds = calculateTimeLeft(dateTo);
-            if (totalSeconds > 0){
+            if (totalSeconds > 0) {
                 skuDatas.push(skuData);
             }
         }
-        console.log(skuDatas);
+       
     }
-    const {detailsData,
+
+    const { detailsData,
         detailsLoading,
-        deriveErrorMessage} = useProductDetails({sku_product: skuDatas});
-    console.log(detailsData)
-    
+        deriveErrorMessage } = useProductDetails({ sku_product: skuDatas });
+   
     const { id, title } = props;
     const talonProps = useCategoryList({
-        query: categoryListQuery,
         id
     });
 
     const { childCategories, error, loading } = talonProps;
-
-    const classes = mergeClasses(defaultClasses, props.classes);
+    const { formatMessage } = useIntl();
+    const classes = useStyle(defaultClasses, props.classes);
 
     const header = title ? (
         <div className={classes.header}>
@@ -71,45 +76,60 @@ const CategoryList = props => {
     ) : null;
 
     let child;
-    if (error) {
-        child = (
-            <div className={classes.fetchError}>
-                Data Fetch Error: <pre>{error.message}</pre>
-            </div>
-        );
-    }
-    if (loading || !childCategories) {
-        child = fullPageLoadingIndicator;
-    } else if (childCategories.length === 0) {
-        child = (
-            <div className={classes.noResults}>No child categories found.</div>
-        );
+
+    if (!childCategories) {
+        if (error) {
+            if (process.env.NODE_ENV !== 'production') {
+                console.error(error);
+            }
+
+            return <ErrorView />;
+        } else if (loading) {
+            child = fullPageLoadingIndicator;
+        }
     } else {
-        child = (
-            <div className={classes.content}>
-                {childCategories.map(item => (
-                    <CategoryTile item={mapCategory(item)} key={item.url_key} />
-                ))}
-            </div>
-        );
+        if (childCategories.length) {
+            child = (
+                <div className={classes.content}>
+                    {childCategories.map(item => (
+                        <CategoryTile
+                            item={mapCategory(item)}
+                            key={item.url_key}
+                        />
+                    ))}
+                </div>
+            );
+        } else {
+            return (
+                <ErrorView
+                    message={formatMessage({
+                        id: 'categoryList.noResults',
+                        defaultMessage: 'No child categories found.'
+                    })}
+                />
+            );
+        }
     }
+
     return (
         <div className={classes.root}>
             {header}
             {child}
             {detailsData ? (
-                <Gallery items={detailsData.products.items}/>
-            ):(null)}
+                <Gallery items={detailsData.products.items} />
+            ) : (null)}
+
         </div>
     );
 };
 
 CategoryList.propTypes = {
-    id: number,
+    id: number.isRequired,
     title: string,
     classes: shape({
         root: string,
         header: string,
+        title: string,
         content: string
     })
 };

@@ -21,6 +21,17 @@ export const FETCH_PRODUCT_DETAIL = gql`
                 small_image {
                     url
                 }
+                mp_label_data {
+                    list_position
+                    list_position_grid
+                    label_image
+                    rule_id
+                    label_font
+                    label_font_size
+                    label_color
+                    label_template
+                    label
+                }
                 url_key
                 url_suffix
                 mp_daily_deal {
@@ -62,7 +73,7 @@ export const useProductDetails = props => {
         variables: {
             sku_product: sku_product
         },
-        fetchPolicy: 'no-cache'
+        fetchPolicy: 'cache-and-network'
     });
     let deriveErrorMessage;
     if (detailsError) {
