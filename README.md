@@ -3,7 +3,7 @@
 
 ## What is this?
 
-http://dailydeals.pwa-commerce.com/
+https://dailydeals.pwa-commerce.com/gumac-3.html
 
 ## Requirements
 
