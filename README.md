@@ -1,14 +1,13 @@
 # Daily Deal module for Magento PWA Studio
 
+This module acts as an add-on for [Mageplaza's Daily Deal extension](https://www.mageplaza.com/magento-2-daily-deal-extension/) to make it work with Magento PWA Studio.
 
-## What is this?
-
-https://dailydeals.pwa-commerce.com/gumac-3.html
+Frontend Demo: https://dailydeals.pwa-commerce.com/silver-amor-bangle-set.html
 
 ## Requirements
 
 - Magento version 2.4.* or >= 2.3.5
-- Got [Mageplaza Daily Deal extension](https://www.mageplaza.com/magento-2-daily-deal-extension/) and [Daily Deal GraphQL](http://dailydeal.pwa-commerce.com/) installed
+- Got [Mageplaza Daily Deal extension](https://www.mageplaza.com/magento-2-daily-deal-extension/) and [Daily Deal GraphQL](https://github.com/mageplaza/magento-2-daily-deal-graphql) installed
 
 ## Installation
 
